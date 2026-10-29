@@ -31,7 +31,7 @@ def show_market_comparison(product=None, ai_price=None):
 
     if ai_price is None:
         ai_price = st.number_input(
-            "AI 추천 판매 가격(원)",
+            "추천 판매 가격(원)",
             min_value=0,
             value=MARKET_PRICES[product][2],
             step=1000,
@@ -55,23 +55,42 @@ def show_market_comparison(product=None, ai_price=None):
     c1.metric("최저 참고 시세", f"{low:,.0f}원")
     c2.metric("평균 참고 시세", f"{average:,.0f}원")
     c3.metric("최고 참고 시세", f"{high:,.0f}원")
-    st.metric("AI 추천 판매 가격", f"{ai_price:,.0f}원",
+    st.metric("추천 판매 가격", f"{ai_price:,.0f}원",
               delta=f"{difference:+,.0f}원 (평균 대비)",
               delta_color="off")
 
     if difference > 0:
-        st.warning(f"AI 추천 가격이 평균 참고 시세보다 {difference:,.0f}원 높습니다.")
+        st.warning(f"추천 가격이 평균 참고 시세보다 {difference:,.0f}원 높습니다.")
     elif difference < 0:
-        st.info(f"AI 추천 가격이 평균 참고 시세보다 {abs(difference):,.0f}원 낮습니다.")
+        st.info(f"추천 가격이 평균 참고 시세보다 {abs(difference):,.0f}원 낮습니다.")
     else:
-        st.success("AI 추천 가격이 평균 참고 시세와 같습니다.")
+        st.success("추천 가격이 평균 참고 시세와 같습니다.")
 
-    st.bar_chart({
-        "평균 참고 시세": average,
-        "AI 추천 가격": ai_price,
-    }, y_label="가격(원)")
+    st.markdown("#### 💰 가격 비교")
 
+    percent = (ai_price - average) / average * 100 if average else 0
 
+    if percent < 0:
+        st.success(f"평균 시세보다 {abs(percent):.1f}% 저렴해요!")
+    elif percent > 0:
+        st.warning(f"평균 시세보다 {percent:.1f}% 높아요!")
+    else:
+        st.info("평균 시세와 동일한 가격이에요.")
+
+    max_price = max(ai_price, average, 1)
+    ai_width = ai_price / max_price * 100
+    avg_width = average / max_price * 100
+
+    st.write(f"🟢 추천 판매 가격: **{ai_price:,.0f}원**")
+    st.progress(
+        min(ai_price / max_price, 1.0)
+    )
+
+    st.write(f"⚪ 평균 참고 시세: **{average:,.0f}원**")
+    st.progress(
+        min(average / max_price, 1.0)
+    )
+  
 if __name__ == "__main__":
     st.title("💰 중고 시세 비교 기능")
     show_market_comparison()

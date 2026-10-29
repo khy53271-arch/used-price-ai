@@ -1,6 +1,6 @@
 
 import streamlit as st
-
+from market_compare import show_market_comparison
 from google import genai
 from google.genai import types
 import json
@@ -126,4 +126,4 @@ if st.button("💰 추천 판매 가격 확인"):
 
     st.caption("※ 현재는 테스트용 가상 시세와 감가율을 사용합니다.")
 
-
+    show_market_comparison(product=product, ai_price=price)
