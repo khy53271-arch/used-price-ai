@@ -60,32 +60,39 @@ urgent = st.checkbox("6. 최대한 빨리 판매하고 싶어요")
 if evaluation_method == "AI 사진 분석":
     st.subheader("📸 AI 제품 상태 분석")
 
-    uploaded_file = st.file_uploader(
-        "판매할 제품의 사진을 업로드해 주세요",
-        type=["jpg", "jpeg", "png"]
+    uploaded_files = st.file_uploader(
+        "판매할 제품의 사진을 업로드해 주세요 (최소 2장 이상)",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True
     )
 
-    if uploaded_file is not None:
+    if uploaded_files:
         st.image(
-            uploaded_file,
-            caption="업로드한 제품 사진",
-            width=300
+            uploaded_files,
+            caption=[f"사진 {i + 1}" for i in range(len(uploaded_files))],
+            width=200
         )
 
+    if len(uploaded_files) < 2:
+        st.warning("📷 사진을 최소 2장 이상 업로드해 주세요. (앞면, 뒷면, 옆면 등)")
+    else:
         if st.button("🤖 AI 사진 분석하기"):
-            with st.spinner("Gemini AI가 제품 상태를 분석하고 있어요..."):
+            with st.spinner(f"Gemini AI가 사진 {len(uploaded_files)}장을 분석하고 있어요..."):
                 try:
-                    image_bytes = uploaded_file.getvalue()
+                    image_parts = [
+                        types.Part.from_bytes(
+                            data=f.getvalue(),
+                            mime_type=f.type
+                        )
+                        for f in uploaded_files
+                    ]
 
                     response = client.models.generate_content(
                         model="gemini-3.5-flash",
-                        contents=[
-                            types.Part.from_bytes(
-                                data=image_bytes,
-                                mime_type=uploaded_file.type
-                            ),
-                            """이 사진은 중고거래 상품의 사진입니다.
-                            제품의 외관 상태를 분석하세요.
+                        contents=image_parts + [
+                            f"""이 사진 {len(uploaded_files)}장은 같은 중고거래 상품을 여러 각도에서 찍은 사진입니다.
+                            모든 사진을 종합해서 제품의 외관 상태를 분석하세요.
+                            한 사진에서라도 흠집이나 파손이 보이면 등급에 반영하세요.
 
                             다음 기준으로 등급을 추천하세요.
                             A: 눈에 띄는 흠집이나 오염이 거의 없음
@@ -94,7 +101,7 @@ if evaluation_method == "AI 사진 분석":
 
                             사진에서 확인할 수 없는 기능적 결함은 추측하지 마세요.
                             반드시 다음 JSON 형식으로 답하세요.
-                            {"grade": "A", "reason": "판단 근거"}"""
+                            {{"grade": "A", "reason": "판단 근거 (어느 사진에서 무엇이 보였는지 포함)"}}"""
                         ],
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json"
