@@ -7,7 +7,7 @@ import json
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-st.title("💰 AI 중고거래 가격 추천 시스템")
+st.title("📱 AI 중고폰 거래 가격 추천 시스템")
 st.write("제품 정보와 판매 조건을 입력해 주세요.")
 
 
